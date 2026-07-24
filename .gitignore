@@ -1,0 +1,36 @@
+# Compiled Python files
+*.pyc
+__pycache__/
+*.pyo
+
+# virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# node.js and Next.js
+node_modules/
+out/
+.next/
+
+# temp files
+temp/
+tmp/
+*.log
+
+# old CacheInsight
+CacheInsight/
+
+# Python caching and environment
+.env
