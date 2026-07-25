@@ -141,6 +141,27 @@ def create_preset(preset: PresetCreate, db: Session = Depends(get_db)):
     db.refresh(new_preset)
     return new_preset
 
+@app.get("/api/history")
+def get_history(db: Session = Depends(get_db)):
+    jobs = db.query(models.SimulationJob).order_by(models.SimulationJob.created_at.desc()).limit(50).all()
+    history = []
+    for job in jobs:
+        result_data = None
+        if job.result:
+            try:
+                result_data = json.loads(job.result)
+            except json.JSONDecodeError:
+                result_data = job.result
+        
+        history.append({
+            "id": job.id,
+            "status": job.status,
+            "progress": job.progress,
+            "result": result_data,
+            "created_at": job.created_at
+        })
+    return history
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

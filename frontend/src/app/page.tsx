@@ -3,6 +3,8 @@
 import { useState } from "react";
 import SimulationForm from "@/components/SimulationForm";
 import ProgressBar from "@/components/ProgressBar";
+import ResultDashboard from "@/components/ResultDashboard";
+import HistoryTable from "@/components/HistoryTable";
 import { useSimulationPolling } from "@/hooks/useSimulationPolling";
 
 export default function Home() {
@@ -10,8 +12,8 @@ export default function Home() {
   const { progress, status, result } = useSimulationPolling(jobId);
 
   return (
-    <div className="flex flex-col min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black p-8">
-      <header className="mb-12 text-center">
+    <div className="flex flex-col min-h-screen items-center justify-start bg-zinc-50 font-sans dark:bg-black p-8 pb-20">
+      <header className="mt-8 mb-12 text-center">
         <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white sm:text-5xl mb-4">
           Cache<span className="text-blue-600">Insight</span> Reforged
         </h1>
@@ -30,16 +32,13 @@ export default function Home() {
               Job ID: <span className="font-mono bg-zinc-100 dark:bg-zinc-800 p-1 rounded text-sm">{jobId}</span>
             </p>
             
-            <ProgressBar progress={progress} status={status} />
+            {status !== "Completed" && (
+              <ProgressBar progress={progress} status={status} />
+            )}
             
-            {status === "Completed" && (
-              <div className="mt-8 p-4 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg w-full max-w-2xl text-left shadow-sm">
-                <h3 className="font-bold mb-2">Simulation Complete!</h3>
-                <p className="text-sm opacity-90">Ready to display results in STORY-8.</p>
-                <div className="mt-2 text-xs font-mono overflow-auto max-h-32 p-2 bg-white/50 dark:bg-black/20 rounded">
-                  {JSON.stringify(result, null, 2)}
-                </div>
-              </div>
+            {status === "Completed" && result !== null && (
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              <ResultDashboard result={result as any} />
             )}
             
             {status === "Failed" && (
@@ -57,6 +56,11 @@ export default function Home() {
             </button>
           </div>
         )}
+
+        {/* History Table */}
+        <div className="w-full mt-12 flex justify-center" key={status === "Completed" ? jobId : "default"}>
+          <HistoryTable />
+        </div>
       </main>
     </div>
   );

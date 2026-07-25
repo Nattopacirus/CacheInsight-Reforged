@@ -57,6 +57,9 @@ def _process_in_worker(job_id: str, file_path: str, config: dict):
             raise ValueError(f"Unknown mapping type: {mapping_type}")
 
         # 5. Save result and mark as Completed
+        result["total_accesses"] = result.get("hits", 0) + result.get("misses", 0)
+        result["config"] = config
+        
         job = db.query(SimulationJob).filter(SimulationJob.id == job_id).first()
         if job:
             job.status = "Completed"
