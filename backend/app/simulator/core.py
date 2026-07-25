@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Callable, Optional
 from .utils import log2_int, hex_to_dec
 
 @dataclass
@@ -8,7 +8,7 @@ class CacheBlock:
     valid: bool = False
     last_used: int = 0
 
-def direct_map(cache_size_kb: int, block_size: int, addresses: List[str]) -> Dict[str, Any]:
+def direct_map(cache_size_kb: int, block_size: int, addresses: List[str], progress_callback: Optional[Callable[[int, int], None]] = None) -> Dict[str, Any]:
     cache_size_bytes = cache_size_kb * 1024
     num_blocks = cache_size_bytes // block_size
     offset_bits = log2_int(block_size)
@@ -17,8 +17,9 @@ def direct_map(cache_size_kb: int, block_size: int, addresses: List[str]) -> Dic
     cache = [CacheBlock(0, False, 0) for _ in range(num_blocks)]
     hits = 0
     misses = 0
+    total_addresses = len(addresses)
 
-    for addr_str in addresses:
+    for i, addr_str in enumerate(addresses):
         address = hex_to_dec(addr_str)
         index = (address >> offset_bits) & (num_blocks - 1)
         tag = address >> (offset_bits + index_bits)
@@ -29,6 +30,9 @@ def direct_map(cache_size_kb: int, block_size: int, addresses: List[str]) -> Dic
         else:
             misses += 1
             cache[index] = CacheBlock(tag=tag, valid=True, last_used=0)
+            
+        if progress_callback and (i + 1) % 10000 == 0:
+            progress_callback(i + 1, total_addresses)
 
     total_accesses = hits + misses
     hit_rate = (hits / total_accesses * 100) if total_accesses > 0 else 0.0
@@ -41,7 +45,7 @@ def direct_map(cache_size_kb: int, block_size: int, addresses: List[str]) -> Dic
         "miss_rate": miss_rate
     }
 
-def fully_associative(cache_size_kb: int, block_size: int, addresses: List[str]) -> Dict[str, Any]:
+def fully_associative(cache_size_kb: int, block_size: int, addresses: List[str], progress_callback: Optional[Callable[[int, int], None]] = None) -> Dict[str, Any]:
     cache_size_bytes = cache_size_kb * 1024
     num_blocks = cache_size_bytes // block_size
     offset_bits = log2_int(block_size)
@@ -50,8 +54,9 @@ def fully_associative(cache_size_kb: int, block_size: int, addresses: List[str])
     hits = 0
     misses = 0
     global_time = 0
+    total_addresses = len(addresses)
 
-    for addr_str in addresses:
+    for i, addr_str in enumerate(addresses):
         global_time += 1
         address = hex_to_dec(addr_str)
         tag = address >> offset_bits
@@ -83,6 +88,9 @@ def fully_associative(cache_size_kb: int, block_size: int, addresses: List[str])
 
             last_accessed = lru_idx
             cache[last_accessed] = CacheBlock(tag=tag, valid=True, last_used=global_time)
+            
+        if progress_callback and (i + 1) % 10000 == 0:
+            progress_callback(i + 1, total_addresses)
 
     total_accesses = hits + misses
     hit_rate = (hits / total_accesses * 100) if total_accesses > 0 else 0.0
@@ -95,19 +103,19 @@ def fully_associative(cache_size_kb: int, block_size: int, addresses: List[str])
         "miss_rate": miss_rate
     }
 
-def set_associative(cache_size_kb: int, block_size: int, sets: int, addresses: List[str]) -> Dict[str, Any]:
+def set_associative(cache_size_kb: int, block_size: int, sets: int, addresses: List[str], progress_callback: Optional[Callable[[int, int], None]] = None) -> Dict[str, Any]:
     cache_size_bytes = cache_size_kb * 1024
     blocks_per_set = cache_size_bytes // block_size // sets
     offset_bits = log2_int(block_size)
     index_bits = log2_int(sets)
 
-    # Initialize a 2D array of CacheBlock
     cache = [[CacheBlock(0, False, 0) for _ in range(blocks_per_set)] for _ in range(sets)]
     hits = 0
     misses = 0
     global_time = 0
+    total_addresses = len(addresses)
 
-    for addr_str in addresses:
+    for i, addr_str in enumerate(addresses):
         global_time += 1
         address = hex_to_dec(addr_str)
         index = (address >> offset_bits) & (sets - 1)
@@ -139,6 +147,9 @@ def set_associative(cache_size_kb: int, block_size: int, sets: int, addresses: L
                     lru_idx = j
 
             cache[index][lru_idx] = CacheBlock(tag=tag, valid=True, last_used=global_time)
+            
+        if progress_callback and (i + 1) % 10000 == 0:
+            progress_callback(i + 1, total_addresses)
 
     total_accesses = hits + misses
     hit_rate = (hits / total_accesses * 100) if total_accesses > 0 else 0.0
