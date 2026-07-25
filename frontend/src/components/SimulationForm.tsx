@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { isPowerOfTwo } from "@/utils/validation";
+import PresetManager from "./PresetManager";
+import MarkdownModal from "./MarkdownModal";
 
 interface SimulationFormProps {
   onJobStarted: (jobId: string) => void;
@@ -16,6 +18,7 @@ export default function SimulationForm({ onJobStarted }: SimulationFormProps) {
   
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isModalOpen, setModalOpen] = useState(false);
 
   const isCacheSizeValid = isPowerOfTwo(cacheSize);
   const isBlockSizeValid = isPowerOfTwo(blockSize);
@@ -67,6 +70,21 @@ export default function SimulationForm({ onJobStarted }: SimulationFormProps) {
     <div className="bg-white dark:bg-zinc-900 p-8 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl">
       <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-zinc-50">Cache Simulation Setup</h2>
       
+      <PresetManager 
+        onApplyPreset={(cSize, bSize, mType, nWay) => {
+          setCacheSize(cSize);
+          setBlockSize(bSize);
+          setMappingType(mType);
+          setNWay(nWay);
+        }}
+        currentConfig={{
+          cacheSize,
+          blockSize,
+          mappingType,
+          nWay
+        }}
+      />
+      
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           
@@ -98,7 +116,17 @@ export default function SimulationForm({ onJobStarted }: SimulationFormProps) {
 
           {/* Mapping Type */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Mapping Type</label>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Mapping Type</label>
+              <button
+                type="button"
+                onClick={() => setModalOpen(true)}
+                className="text-blue-500 hover:text-blue-600 flex items-center justify-center rounded-full w-5 h-5 bg-blue-50 dark:bg-blue-900/30 text-xs font-bold transition-colors"
+                title="What is this?"
+              >
+                i
+              </button>
+            </div>
             <select 
               value={mappingType} 
               onChange={(e) => setMappingType(e.target.value)}
@@ -154,6 +182,12 @@ export default function SimulationForm({ onJobStarted }: SimulationFormProps) {
         </button>
 
       </form>
+
+      <MarkdownModal 
+        isOpen={isModalOpen} 
+        onClose={() => setModalOpen(false)} 
+        markdownUrl="/docs/cache-mapping.md" 
+      />
     </div>
   );
 }
