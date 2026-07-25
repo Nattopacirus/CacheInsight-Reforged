@@ -1,4 +1,7 @@
 from fastapi import FastAPI, BackgroundTasks, UploadFile, File, Form, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from typing import List
+from app.schemas import PresetCreate, PresetResponse
 from database import engine, Base, get_db
 from contextlib import asynccontextmanager
 from sqlalchemy.orm import Session
@@ -43,6 +46,14 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="CacheInsight-Reforged API",
     lifespan=lifespan
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.get("/")
@@ -106,6 +117,29 @@ def get_simulation_status(job_id: str, db: Session = Depends(get_db)):
         "progress": job.progress,
         "result": result_data
     }
+
+@app.get("/api/presets", response_model=List[PresetResponse])
+def get_presets(db: Session = Depends(get_db)):
+    return db.query(models.Preset).order_by(models.Preset.created_at.desc()).all()
+
+@app.post("/api/presets", response_model=PresetResponse, status_code=status.HTTP_201_CREATED)
+def create_preset(preset: PresetCreate, db: Session = Depends(get_db)):
+    existing = db.query(models.Preset).filter(models.Preset.name == preset.name).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Preset name already exists")
+    
+    new_preset = models.Preset(
+        name=preset.name,
+        cache_size=preset.cache_size,
+        block_size=preset.block_size,
+        mapping_type=preset.mapping_type,
+        n_way=preset.n_way,
+        replacement_policy=preset.replacement_policy
+    )
+    db.add(new_preset)
+    db.commit()
+    db.refresh(new_preset)
+    return new_preset
 
 if __name__ == "__main__":
     import uvicorn

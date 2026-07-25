@@ -66,3 +66,58 @@ def test_get_simulation_status_found():
         db.delete(job)
         db.commit()
         db.close()
+
+def test_create_preset_success():
+    # clean up first if exists
+    db = SessionLocal()
+    from models import Preset
+    db.query(Preset).filter(Preset.name == "Test Preset 1").delete()
+    db.commit()
+    db.close()
+
+    preset_data = {
+        "name": "Test Preset 1",
+        "cache_size": 32,
+        "block_size": 64,
+        "mapping_type": "Set",
+        "n_way": 4,
+        "replacement_policy": "LRU"
+    }
+    response = client.post("/api/presets", json=preset_data)
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "Test Preset 1"
+    assert "id" in data
+
+def test_create_preset_duplicate():
+    preset_data = {
+        "name": "Test Preset 1",
+        "cache_size": 32,
+        "block_size": 64,
+        "mapping_type": "Set",
+        "n_way": 4,
+        "replacement_policy": "LRU"
+    }
+    response = client.post("/api/presets", json=preset_data)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Preset name already exists"
+
+def test_create_preset_invalid_size():
+    preset_data = {
+        "name": "Test Preset Invalid",
+        "cache_size": 30,  # Not power of 2
+        "block_size": 64,
+        "mapping_type": "Direct",
+        "replacement_policy": "LRU"
+    }
+    response = client.post("/api/presets", json=preset_data)
+    assert response.status_code == 422  # Pydantic validation error
+
+def test_get_presets_success():
+    response = client.get("/api/presets")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    # Check if "Test Preset 1" is in the list
+    names = [p["name"] for p in data]
+    assert "Test Preset 1" in names
