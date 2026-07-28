@@ -66,6 +66,40 @@
 - **Asynchronous Job Pattern:** Client ส่งไฟล์เข้าเซิร์ฟเวอร์ -> เซิร์ฟเวอร์จะคืนค่า `job_id` กลับทันที -> Client ทำการสร้างลูปตรวจสอบสถานะผ่าน `/jobs/{job_id}/status` จนกว่างานจะเสร็จสิ้น
 - **File Handling:** Backend รับไฟล์อัปโหลดแล้วบันทึกลงโฟลเดอร์ชั่วคราว (Temporary directory) ส่งที่อยู่ไฟล์นั้นให้ Background Worker และ Worker ทำการลบไฟล์ทิ้งหลังจากงานจำลองผลเสร็จสมบูรณ์
 
+### แผนภาพการทำงานของระบบ (Asynchronous Job Workflow Diagram)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User / Client
+    participant FE as Frontend (Next.js)
+    participant BE as Backend (FastAPI)
+    participant Worker as Background Worker (ProcessPoolExecutor)
+    participant DB as Database (MS SQL Server)
+
+    User->>FE: 1. Fill Cache Parameters & Upload CSV File
+    FE->>BE: 2. Submit POST /api/simulate (Form-data & JSON)
+    BE->>BE: 3. Validate Inputs (Power of 2 & File check)
+    BE->>DB: 4. Save Job Record (Status: Pending)
+    BE->>BE: 5. Save CSV to Temporary Directory
+    BE->>Worker: 6. Dispatch Async Simulation Task
+    BE-->>FE: 7. Return job_id & Status (Pending)
+    
+    loop 8. Status Polling Loop
+        FE->>BE: 9. Request GET /api/simulate/{job_id}
+        BE->>DB: 10. Query Job Progress & Metrics
+        DB-->>BE: 11. Return Current Job Record
+        BE-->>FE: 12. Response (Status, Progress %, Result)
+        FE->>User: 13. Render Progress Bar & Status updates
+    end
+
+    Worker->>Worker: 14. Parse Address & Calculate Hit/Miss (LRU)
+    Worker->>DB: 15. Batch Update Progress (Every 10,000 lines)
+    Worker->>DB: 16. Update Final Simulation Result & Status (Completed)
+    Worker->>Worker: 17. Clean up Temporary CSV File
+    FE->>User: 18. Display Final Cache Metrics & Visualizations
+```
+
 ## 7. เครื่องมือและคุณลักษณะเด่น (Tools/Features)
 
 **กลไกการจำลองการทำงาน (Simulation Engine - Backend):**
@@ -112,6 +146,34 @@
 - [ ] แอปพลิเคชันเก็บประวัติ History ได้อย่างแม่นยำ แม้จะรีสตาร์ทแอปไปแล้ว
 
 ## 12. ระยะเวลาการดำเนินงาน (Implementation Phases)
+
+### แผนภาพขั้นตอนการดำเนินงาน (Implementation Workflow Diagram)
+
+```mermaid
+flowchart TD
+    subgraph Phase1["Phase 1: Foundation & Infrastructure"]
+        P1_1["1. Setup DB Schema (Presets & Simulation_Jobs)"] --> P1_2["2. Build Next.js UI Shell"]
+    end
+
+    subgraph Phase2["Phase 2: Core Simulation Engine"]
+        P2_1["3. Port C++ cachesim.cpp Logic to Python"] --> P2_2["4. Implement ProcessPoolExecutor Worker"]
+        P2_2 --> P2_3["5. Create Submit Job & Status Polling APIs"]
+    end
+
+    subgraph Phase3["Phase 3: Frontend Integration"]
+        P3_1["6. Build Parameter Form Validation"] --> P3_2["7. Connect Polling to UI Progress Bar"]
+        P3_2 --> P3_3["8. Implement History & Visualization Views"]
+    end
+
+    subgraph Phase4["Phase 4: Educational Content & Testing"]
+        P4_1["9. Integrate react-markdown with Modal Popups"] --> P4_2["10. Write Theory Content in public/ Folder"]
+        P4_2 --> P4_3["11. Perform 1M Addresses Stress Test"]
+    end
+
+    P1_2 --> P2_1
+    P2_3 --> P3_1
+    P3_3 --> P4_1
+```
 
 **Phase 1: โครงสร้างพื้นฐาน (Foundation & Infrastructure)**
 - เป้าหมาย: สร้างระบบ Repositories, ทำการเชื่อมต่อฐานข้อมูล MS SQL, สร้างโครงสร้างเริ่มต้นของ FastAPI/Next.js

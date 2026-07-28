@@ -168,6 +168,7 @@ if __name__ == "__main__":
 
 #how to run 
 """
+cmd
 cd backend
 venv\Scripts\activate
 python -m uvicorn main:app --reload

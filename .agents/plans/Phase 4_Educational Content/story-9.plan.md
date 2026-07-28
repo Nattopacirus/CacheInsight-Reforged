@@ -24,8 +24,11 @@
 ### ฟีเจอร์ที่รองรับ (Features)
 1. **Markdown Renderer**: นำไลบรารี `react-markdown` มาใช้แปลงโค้ดจากไฟล์ `.md` ให้กลายเป็น HTML เพื่อแสดงผลสวยงามบนหน้าเว็บ
 2. **GFM Support**: รองรับส่วนขยาย `remark-gfm` ทำให้สามารถแสดงผลตาราง (Tables), ขีดฆ่า (Strikethrough) และ Checklist ได้สมบูรณ์
-3. **Dynamic Fetching**: โหลดเนื้อหาจากไฟล์ `/markdown/mapping-theory.md` (จะถูกสร้างใน STORY-10) แบบ Asynchronous (ไม่ต้องแนบไปกับโค้ดหลัก ทำให้แก้เนื้อหาง่าย)
-4. **Modal Window**: หน้าต่าง Popup ที่สามารถเลื่อนอ่าน (Scroll) ได้ และรองรับการแสดงรูปภาพ (Images) อย่างถูกต้อง
+3. **Dynamic Fetching**: โหลดเนื้อหาไฟล์ Markdown แบบ Asynchronous ตามประเภท Mapping ที่เลือก (อ้างอิงจากไฟล์ที่เตรียมไว้ใน STORY-10):
+   - `02-direct-mapped.md`
+   - `03-set-associative.md`
+   - `04-fully-associative.md`
+4. **Modal Window**: หน้าต่าง Popup ที่สามารถเลื่อนอ่าน (Scroll) ได้ และรองรับการแสดงรูปภาพ (Images) เช่น `01-Cache-Memory.png` อย่างถูกต้อง
 
 ### รูปแบบข้อมูล (Input / Process / Output)
 - **Input (User Action)**: ผู้ใช้คลิกปุ่ม `<button> ℹ️ Info</button>` บริเวณใกล้กับช่องเลือก `Mapping Type` ใน `SimulationForm`
@@ -48,7 +51,7 @@ graph TD
     B --> C["3. Modal แสดงขึ้นมาบนหน้าจอ พร้อม Loading State"]
     C --> D{"4. ไฟล์ Markdown นี้เคยดึงมาแล้วหรือยัง?"}
     
-    D -->|"ยัง (Fetch)"| E["5. `fetch('/docs/cache-mapping.md')`"]
+    D -->|"ยัง (Fetch)"| E["5. `fetch('/docs/02-direct-mapped.md')` (เปลี่ยนตาม Dropdown)"]
     D -->|"ดึงมาแล้ว (Cache)"| F["6. ข้ามการ Fetch"]
     
     E --> F
@@ -81,7 +84,7 @@ graph TD
 ### Task 2: สร้าง Component `MarkdownModal`
 - **ไฟล์ (File)**: `frontend/src/components/MarkdownModal.tsx`
 - **การทำงาน (Implement)**:
-  - รับ Props: `isOpen`, `onClose`, `markdownUrl` (เช่น `/docs/cache-mapping.md`)
+  - รับ Props: `isOpen`, `onClose`, `markdownUrl` (เช่น `/docs/02-direct-mapped.md`)
   - ใช้ `useEffect` ภายในเพื่อสั่ง `fetch(markdownUrl).then(res => res.text())` แล้วเก็บผลลัพธ์ลง State `content`
   - วาด Layout หน้าต่าง Popup (มี Back-drop สีดำด้านหลังโปร่งแสง)
   - ภายในกล่อง Modal วางแท็ก `<ReactMarkdown remarkPlugins={[remarkGfm]} className="prose">{content}</ReactMarkdown>`
@@ -91,8 +94,8 @@ graph TD
 - **การทำงาน (Implement)**:
   - วางปุ่มไอคอนตัว "i" หรือ "Info" ไว้ข้างๆ ฟิลด์ `Mapping Type`
   - เมื่อคลิกให้สั่ง `setModalOpen(true)`
-  - ฝัง Component `<MarkdownModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} markdownUrl="/docs/cache-mapping.md" />` ลงในโครงสร้าง
-  - *(เตรียมไฟล์ Mock `.md` เปล่าๆ ชื่อ `cache-mapping.md` ไว้ในโฟลเดอร์ `public/docs/` เพื่อป้องกัน Fetch Error รอ STORY-10 มาเติมเนื้อหา)*
+  - ฝัง Component `<MarkdownModal />` ลงในโครงสร้าง โดยกำหนด `markdownUrl` ให้เปลี่ยนไปตาม State ของ Dropdown `Mapping Type`
+  - (ตัวอย่าง: ถ้า Dropdown คือ `Direct Mapped` ให้ส่ง `/docs/02-direct-mapped.md`)
 
 ---
 

@@ -68,7 +68,18 @@ export default function SimulationForm({ onJobStarted }: SimulationFormProps) {
 
   return (
     <div className="bg-white dark:bg-zinc-900 p-8 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl">
-      <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-zinc-50">Cache Simulation Setup</h2>
+      <div className="flex justify-between items-start mb-6">
+        <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Cache Simulation Setup</h2>
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          className="text-blue-500 hover:text-blue-600 flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-sm font-semibold transition-colors shadow-sm"
+          title="Learn about Cache Mapping"
+        >
+          <span className="flex items-center justify-center rounded-full w-5 h-5 bg-blue-100 dark:bg-blue-800 text-xs font-bold">i</span>
+          Info
+        </button>
+      </div>
       
       <PresetManager 
         onApplyPreset={(cSize, bSize, mType, nWay) => {
@@ -116,17 +127,7 @@ export default function SimulationForm({ onJobStarted }: SimulationFormProps) {
 
           {/* Mapping Type */}
           <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Mapping Type</label>
-              <button
-                type="button"
-                onClick={() => setModalOpen(true)}
-                className="text-blue-500 hover:text-blue-600 flex items-center justify-center rounded-full w-5 h-5 bg-blue-50 dark:bg-blue-900/30 text-xs font-bold transition-colors"
-                title="What is this?"
-              >
-                i
-              </button>
-            </div>
+            <label className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Mapping Type</label>
             <select 
               value={mappingType} 
               onChange={(e) => setMappingType(e.target.value)}
@@ -186,7 +187,12 @@ export default function SimulationForm({ onJobStarted }: SimulationFormProps) {
       <MarkdownModal 
         isOpen={isModalOpen} 
         onClose={() => setModalOpen(false)} 
-        markdownUrl="/docs/cache-mapping.md" 
+        markdownUrls={[
+          "/docs/01-Cache-Memory.png",
+          "/docs/02-direct-mapped.md",
+          "/docs/03-set-associative.md",
+          "/docs/04-fully-associative.md"
+        ]} 
       />
     </div>
   );

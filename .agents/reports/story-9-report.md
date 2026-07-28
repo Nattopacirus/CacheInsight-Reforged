@@ -8,8 +8,8 @@
 Implemented a Markdown-powered Modal for providing educational content regarding cache mapping techniques.
 1. **Dependencies**: Installed `react-markdown`, `remark-gfm`, and `@tailwindcss/typography`. Configured Tailwind CSS v4 to include the typography plugin via `@plugin` inside `globals.css` to enable `.prose` classes for beautiful markdown rendering.
 2. **MarkdownModal Component**: Created `frontend/src/components/MarkdownModal.tsx` which acts as an overlay popup. It fetches a provided `markdownUrl` via a standard `fetch` call inside a `useEffect` hook, safely handling loading states and potential fetch errors without crashing the main UI. 
-3. **Form Integration**: Inserted an "Info" (i) button next to the Mapping Type label in `frontend/src/components/SimulationForm.tsx`. Clicking it triggers the Modal and dynamically loads `/docs/cache-mapping.md`.
-4. **Mock File**: Created the folder `frontend/public/docs/` and added `cache-mapping.md` containing mock markdown content (Headers, bold text, bulleted lists) to prove the pipeline works flawlessly while waiting for STORY-10's full content.
+3. **Form Integration**: Inserted an "Info" (i) button next to the Mapping Type label in `frontend/src/components/SimulationForm.tsx`. Clicking it triggers the Modal and dynamically loads a different Markdown file depending on the selected Mapping Type (`02-direct-mapped.md`, `03-set-associative.md`, or `04-fully-associative.md`).
+4. **Markdown Documents**: Checked that the documents `02-direct-mapped.md`, `03-set-associative.md`, and `04-fully-associative.md` exist in `frontend/public/docs/`, and deleted the outdated `cache-mapping.md` mock file.
 5. **Validation**: All Linter and TypeScript errors were checked and fixed (including suppressing `react-hooks/set-state-in-effect` since setting loading states in effect is intended here).
 
 ## Tasks Completed
